@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:${PGVERSION:-latest}
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_replication_slots=10"
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 25432:5432
+  jumphost:
+    image: geekinutah/ssh-jumphost:latest
+    environment:
+      USER: tunnel
+    volumes:
+      - ./keys/public:/keys
+    ports:
+      - "2222:22"
+    ulimits:
+      nproc: 655350
+      nofile:
+          soft: 200000
+          hard: 400000
+    depends_on:
+      - postgres
+  vault:
+    image: vault:1.9.3
+    ports:
+      - 8200:8200
