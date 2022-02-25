@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+
+	<title>Reveal JS presentation</title>
+
+	<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+	<meta name="author" content="Hakim El Hattab">
+
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link rel="stylesheet" href="http://localhost:56560/libs/reveal.js/4.1.3/reset.css">
+	<link rel="stylesheet" href="http://localhost:56560/libs/reveal.js/4.1.3/reveal.css">
+
+	
+	
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+	  <!-- highlight Theme -->
+  	
+	  <link rel="stylesheet" href="http://localhost:56560/libs/highlight.js/11.3.1/styles/Rainbow.min.css">
+	
+	
+		
+	<link rel="stylesheet" href="http://localhost:56560/libs/reveal.js/4.1.3/plugin/chalkboard/style.css">
+	
+	
+	
+		<link rel="stylesheet" href="http://localhost:56560/libs/reveal.js/4.1.3/plugin/customcontrols/style.css">
+	
+	<link rel="stylesheet" href="http://localhost:56560/libs/styles/tasklist.css">
+
+
+
+  <!-- Revealjs Theme -->
+  
+  	<link rel="stylesheet" href="http://localhost:56560/libs/reveal.js/4.1.3/theme/beige.css" id="theme">
+  
+  
+
+
+  <!-- Revealjs Theme -->
+  
+
+ 
+</head>
+
+<body>
+  
+
+
+  <div class="reveal">
+
+    <!-- Any section element inside of this container is displayed as a slide -->
+    <div class="slides">
+
+      
+
+
+    
+        <section >
+            
+            <h1>.env is dead long live the vault</h1>
+<h2>Use your secrets safely</h2>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h1>How we use the secrets</h1>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <img src="/its-a-secret.jpeg"  width="700px">
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3><code>mysql.php</code></h3>
+<pre><code class="language-php">&lt;?php
+$servername = &quot;localhost&quot;;
+$username = &quot;username&quot;;
+$password = &quot;password&quot;;
+
+// Create connection
+$conn = new mysqli($servername, $username, $password);
+
+// Check connection
+if ($conn-&gt;connect_error) {
+  die(&quot;Connection failed: &quot; . $conn-&gt;connect_error);
+}
+echo &quot;Connected successfully&quot;;
+?&gt;
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3><code>config.php</code></h3>
+<pre><code class="language-php">&lt;?php
+/** The name of the database for WordPress */
+define( 'DB_NAME', 'wordpress' );
+
+/** Database username */
+define( 'DB_USER', 'wordpress' );
+
+/** Database password */
+define( 'DB_PASSWORD', 'Password123.' );
+
+/** Database hostname */
+define( 'DB_HOST', 'localhost' );
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3><code>.env</code></h3>
+<pre><code class="language-bash">DB_NAME=&quot;wordpress&quot;
+DB_USER=&quot;wordpress&quot;
+DB_PASSWORD=&quot;Password123.&quot;
+DB_HOST=&quot;localhost&quot;
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>docker</h3>
+<pre><code class="language-bash">docker run -it --rm \
+    --volumes-from some-wordpress \
+    --network container:some-wordpress \
+    -e WORDPRESS_DB_USER=wordpress \
+    -e WORDPRESS_DB_PASSWORD=Password123. \
+    # [and other used environment variables]
+    wordpress:cli user list
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3><code>passwords.txt</code></h3>
+<pre><code class="language-txt">wp1: wordpress / Password123.
+wp2: wordpress / Password321.
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>git</h3>
+<pre><code class="language-bash">git add cert.pem cert.key
+git commit -am &quot;Add some certificates&quot;
+git push
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>kubernetes</h3>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: envs
+  namespace: dev
+data:
+  USERNAME: QWhvakFob2pBaG9qQWhvago=
+  PASSWORD: QWhvakFob2pBaG9qQWhvago=
+  SECRET: QWhvakFob2pBaG9qQWhvago=
+type: Opaque
+
+</code></pre>
+<hr>
+<p>base64 is not encryption</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <img src="/one-password.jpeg"  width="700px">
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>What is wrong with you?</h2>
+<ul>
+<li>Plain text</li>
+<li>Visible (Everybody can read it)</li>
+<li>Durable (I can steal it and use it later)</li>
+<li>Hard to change (update, distribute, restart)</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h1>Hashicorp Vault</h1>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>Vault to the rescue</h2>
+<ul>
+<li>Service (REST API)</li>
+<li>Strong authentication (different methods)</li>
+<li>Role based</li>
+<li>Time limited &amp; one time</li>
+<li>Not only secrets store</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <img src="/vault-triangle.png">
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>Use cases</h2>
+<ul>
+<li>Automated PKI Infrastructure</li>
+<li>Data Encryption</li>
+<li>Database Credential Rotation</li>
+<li>Dynamic Secrets</li>
+<li>Identity-based Access</li>
+<li>Key Management</li>
+<li>Kubernetes Secrets</li>
+<li>Secrets Management</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>Vault setup</h2>
+<ul>
+<li>Storage</li>
+<li>Seal/unseal</li>
+<li>Root token</li>
+<li>Auth methods</li>
+<li>Users/roles</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h1>Show me something!</h1>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>Vault start</h2>
+<ul>
+<li>start as docker with zero config</li>
+</ul>
+<pre><code class="language-bash">docker run -it --name vault -p 8080:8200 vault:1.9.3
+</code></pre>
+<ul>
+<li>save <strong>Unseal key</strong> and <strong>Root token</strong></li>
+<li>run new terminal</li>
+</ul>
+<pre><code class="language-bash">export VAULT_TOKEN=&quot;s.something&quot;
+export VAULT_ADDR=&quot;http://localhost:8080&quot;
+# export VAULT_FORMAT=&quot;json&quot;
+open http://localhost:8080
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>Secrets</h2>
+<ul>
+<li>Key/Value</li>
+<li>Transit</li>
+<li>Databases</li>
+<li>PKI</li>
+<li>SSH</li>
+<li>AWS / Google Cloud / Azure</li>
+<li><a href="https://www.vaultproject.io/docs/secrets">https://www.vaultproject.io/docs/secrets</a></li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>Key/Value storage</h2>
+<ul>
+<li>v1 - path + key/value</li>
+<li>v2 - as v1 plus versions</li>
+</ul>
+<pre><code class="language-bash">vault secrets enable -path=kv2/prj kv-v2
+vault kv put kv2/prj/dev/envs foo=bar bar=foo
+vault kv get kv2/prj/dev/envs
+vault kv patch kv2/prj/dev/envs key=value
+vault kv delete kv2/prj/dev/envs
+vault kv destroy -versions=2 kv2/prj/dev/envs
+vault kv metadata get kv2/prj/dev/envs
+</code></pre>
+<ul>
+<li>Metadata - how many versions to hold, delete version after</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>Key/Value storage (curl)</h2>
+<pre><code class="language-bash"># v2
+curl -s -XGET -H &quot;X-Vault-Token: $VAULT_TOKEN&quot; \
+  $VAULT_ADDR/v1/kv2/prj/data/dev/envs | \
+  jq .data.data
+
+# v1
+curl -s -XGET -H &quot;X-Vault-Token: $VAULT_TOKEN&quot; \
+  $VAULT_ADDR/v1/kv2/prj/dev/envs | \
+  jq .data.data
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>Transit</h2>
+<ul>
+<li>Encryption as a service</li>
+</ul>
+<pre><code class="language-bash">vault secrets enable transit
+vault write -f transit/keys/mysecret
+
+vault write transit/encrypt/mysecret \
+  plaintext=$(echo -n &quot;Cookie monster eats the children&quot; | \
+    base64 -w 0)
+
+export VAULT_FORMAT=json
+
+vault write transit/decrypt/mysecret \
+  &quot;ciphertext=vault:v1:1G+I8mQ7sZ45N8PE7GTcs3TpqupWDiLMn8K091z2F1mRJAGeEE6mxDNHBsDoS4S7kQE2iw+3oTs/R+pU&quot; | \
+  jq .data.plaintext | \
+  tr -d \&quot;\&quot; | base64 -d
+
+unset VAULT_FORMAT
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>SSH</h2>
+<p>no more authorized_keys, use ssh CA signed keys</p>
+<pre><code class="language-bash">vault secrets enable -path=ssh-signer ssh
+vault write ssh-signer/config/ca generate_signing_key=true
+
+curl -o /etc/ssh/ca.pub \
+  http://vault:8200/v1/ssh-signer/public_key
+</code></pre>
+<p><code>/etc/ssh/sshd_config</code></p>
+<pre><code>TrustedUserCAKeys /etc/ssh/ca.pub
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>signer role</h3>
+<pre><code class="language-bash">vault write ssh-signer/roles/admin -&lt;&lt;EOH
+{
+  &quot;algorithm_signer&quot;: &quot;rsa-sha2-256&quot;,
+  &quot;allow_user_certificates&quot;: true,
+  &quot;allowed_users&quot;: &quot;*&quot;,
+  &quot;allowed_extensions&quot;: &quot;permit-pty,permit-port-forwarding&quot;,
+  &quot;default_extensions&quot;: [ { &quot;permit-pty&quot;: &quot;&quot; } ],
+  &quot;key_type&quot;: &quot;ca&quot;,
+  &quot;default_user&quot;: &quot;tunnel&quot;,
+  &quot;ttl&quot;: &quot;30m0s&quot;
+}
+EOH
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>sign and use the key</h3>
+<pre><code class="language-bash">ssh-keygen -t rsa -f $HOME/.ssh/id_rsa_vault \
+  -C &quot;vault@example.com&quot;
+
+vault write -field=signed_key ssh-signer/sign/admin \
+    public_key=@$HOME/.ssh/id_rsa_vault.pub &gt; signed_cert.pub
+
+ssh -i signed_cert.pub -i ~/.ssh/id_rsa_vault tunnel@jumphost
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>PostgreSQL</h2>
+<pre><code class="language-bash">vault secrets enable database
+
+vault write database/config/postgresql \
+    plugin_name=postgresql-database-plugin \
+    allowed_roles=&quot;pgrole&quot; \
+    connection_url=&quot;postgresql://{{username}}:{{password}}@postgres:5432/postgres?sslmode=disable&quot; \
+    username=&quot;postgres&quot; \
+    password=&quot;postgres&quot;
+
+vault write database/roles/pgrole \
+    db_name=postgresql \
+    creation_statements=&quot;CREATE ROLE \&quot;{{name}}\&quot; WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
+        GRANT SELECT ON ALL TABLES IN SCHEMA public TO \&quot;{{name}}\&quot;;&quot; \
+    default_ttl=&quot;1h&quot; \
+    max_ttl=&quot;24h&quot;
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>read temporary user credentials</h3>
+<pre><code class="language-bash">vault read database/creds/pgrole
+</code></pre>
+<pre><code class="language-json">{
+  &quot;request_id&quot;: &quot;88d270f4-6aba-f6cd-7c14-3267fd77960b&quot;,
+  &quot;lease_id&quot;: &quot;database/creds/pgrole/AOjEuPeaOP2rc1QBL5Yiowfg&quot;,
+  &quot;lease_duration&quot;: 3600,
+  &quot;renewable&quot;: true,
+  &quot;data&quot;: {
+    &quot;password&quot;: &quot;h3o1hy-aJSR0xKI77cFJ&quot;,
+    &quot;username&quot;: &quot;v-root-pgrole-YeqQe755Kx3jwtJq3iuL-1645704090&quot;
+  },
+  &quot;warnings&quot;: null
+}
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>PKI</h2>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Root CA</h3>
+<pre><code class="language-bash">vault secrets enable pki
+# 10 years
+vault secrets tune -max-lease-ttl=87600h pki
+
+vault write -field=certificate pki/root/generate/internal \
+  common_name=&quot;example.com&quot; \
+  ttl=87600h &gt; CA_cert.crt
+
+vault write pki/config/urls \
+  issuing_certificates=&quot;$VAULT_ADDR/v1/pki/ca&quot; \
+  crl_distribution_points=&quot;$VAULT_ADDR/v1/pki/crl&quot;
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Intermediate CA</h3>
+<pre><code class="language-bash">vault secrets enable -path=pki_int pki
+# 5 years
+vault secrets tune -max-lease-ttl=43800h pki_int
+
+vault write -format=json pki_int/intermediate/generate/internal \
+  common_name=&quot;example.com Intermediate Authority&quot; \
+  | jq -r '.data.csr' &gt; pki_intermediate.csr
+
+vault write -format=json pki/root/sign-intermediate csr=@pki_intermediate.csr \
+  format=pem_bundle ttl=&quot;43800h&quot; \
+  | jq -r '.data.certificate' &gt; intermediate.cert.pem
+
+vault write pki_int/intermediate/set-signed certificate=@intermediate.cert.pem
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Certificates</h3>
+<pre><code>vault write pki_int/roles/example-dot-com \
+     allowed_domains=&quot;example.com&quot; \
+     allow_subdomains=true \
+     max_ttl=&quot;720h&quot;
+
+vault write pki_int/issue/example-dot-com common_name=&quot;test.example.com&quot; ttl=&quot;24h&quot;
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>Policies</h2>
+<ul>
+<li>path + operations</li>
+</ul>
+<pre><code class="language-bash">cat &lt;&lt; EOF &gt; dev-ro.policy
+path &quot;kv2/prj/dev/*&quot; {
+    capabilities = [&quot;read&quot;, &quot;list&quot;]
+}
+EOF
+
+vault policy write dev-ro dev-ro.policy
+vault policy list
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>Auth methods</h2>
+<ul>
+<li>User/pass</li>
+<li>TLS certificates</li>
+<li>JWT/OIDC</li>
+<li>Kubernetes</li>
+<li>AWS</li>
+<li><a href="https://www.vaultproject.io/docs/auth">https://www.vaultproject.io/docs/auth</a></li>
+</ul>
+<hr>
+<p>supports roles (combination of policies)</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>Plugins</h2>
+<ul>
+<li>Extend vault with own secrets</li>
+<li>JWT Issuer</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>Integrations</h2>
+<ul>
+<li>Vault cli</li>
+<li>Golang and other SDKs/clients</li>
+<li>DIY: Just call some http</li>
+<li>Vault Agent</li>
+<li>ExternalSecrets (kubernetes)</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>Examples</h2>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>kubernetes</h3>
+<pre><code>export SERVICE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+
+export VAULT_TOKEN=$(curl -XPOST --data '{&quot;role&quot;: &quot;app-teas-dev&quot;, &quot;jwt&quot;: &quot;$SERVICE&quot;}' \
+  https://vault.eag.guru/v1/auth/kube/teas/red/login \
+  | jq -r '.auth.client_token')
+
+curl -XGET -H &quot;X-Vault-Token: $VAULT_TOKEN&quot; \
+  'https://vault.eag.guru/v1/kv2/prj/data/dev/frontend/envs' \
+  | jq .data.data
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2>Example 2</h2>
+<h3>gitlab pipeline</h3>
+<pre><code>export VAULT_TOKEN=&quot;$(vault write \
+  -field=token auth/gitlab-jwt-eag/login \
+  role=pipeline-carvago \
+  jwt=${CI_JOB_JWT})&quot;
+
+vault kv get -format json kv2/prj/dev/frontend/envs\
+  | jq -r '.data.data | to_entries[] | &quot;\(.key)=\(.value)&quot;' \
+  &gt; .env
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h1>Alternatives</h1>
+<ul>
+<li>AWS Secret manager</li>
+<li>Azure Vault</li>
+<li>CyberArk</li>
+<li>and others</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h1>Q&amp;A</h1>
+<p>Thanks</p>
+<hr>
+
+            </section>
+    
+
+
+    </div>
+
+
+  </div>
+
+  	
+	<script src="http://localhost:56560/libs/reveal.js/4.1.3/reveal.js"></script>
+	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/zoom/zoom.js"></script>
+	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/notes/notes.js"></script>
+	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/search/search.js"></script>
+	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/markdown/markdown.js"></script>
+	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/highlight/highlight.js"></script>
+	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/menu/menu.js"></script>
+	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/math/math.js"></script>
+
+	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/fullscreen/plugin.js"></script>
+  
+  	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/animate/plugin.js"></script>
+  	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/animate/svg.min.js"></script>
+  
+  	 <!--	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/anything/plugin.js"></script> -->
+
+ <!--	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/audio-slideshow/plugin.js"></script>  -->
+<!--	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/audio-slideshow/recorder.js"></script>-->
+<!--	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/audio-slideshow/RecordRTC.js"></script>-->
+
+<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/chalkboard/plugin.js"></script>
+	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/customcontrols/plugin.js"></script>
+	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/embed-tweet/plugin.js"></script>
+
+	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/chart/chart.min.js"></script>
+	<script src="http://localhost:56560/libs/reveal.js/4.1.3/plugin/chart/plugin.js"></script>
+
+  <script>
+
+		const printPlugins = [
+			RevealNotes, 
+			RevealHighlight,
+			RevealMath,
+			RevealAnimate,
+			RevealChalkboard, 
+			RevealEmbedTweet,
+			RevealChart,
+		];
+
+		const plugins =  [...printPlugins,
+		RevealZoom, 
+		RevealSearch, 
+				RevealMarkdown, 
+				RevealMenu, 
+				RevealFullscreen,
+				//RevealAnything,
+				//RevealAudioSlideshow,
+				//RevealAudioRecorder,
+				RevealCustomControls, 
+				// poll
+				// question
+				// seminar
+				 ]
+
+
+		// Also available as an ES module, see:
+		// https://revealjs.com/initialization/
+		Reveal.initialize({
+			controls: true,
+			controlsTutorial: true,
+			controlsLayout: 'bottom-right',
+			controlsBackArrows: 'faded',
+			progress: true,
+			slideNumber: false,
+			//#showSlideNumber "all" "print" "speaker"
+			hash: true,//#  hash: false,
+			//# respondToHashChanges: true,
+			//# history: false,
+			keyboard: true,
+			//#keyboardCondition: null,
+			overview: true,
+			center: true,
+			touch: true,
+			loop: false,
+			rtl: false,
+			//#navigationMode: 'default', linear grid
+			shuffle: false,
+			fragments: true,
+			fragmentInURL: false,
+			embedded: false,
+			help: true,
+			//#pause: true
+			showNotes: false,
+			autoPlayMedia: false, // TODO fix this to a nullable value
+			//#preloadIframes: null. true false
+			//#autoAnimate: true
+			//#autoAnimateMatcher: null,
+			//#autoAnimateEasing: 'ease',
+			//autoAnimateDuration: 1.0,
+			//#autoAnimateUnmatched: true
+			//#autoAnimateStyles: []
+			autoSlide: 0, // TODO fix this to a falseable value
+			autoSlideStoppable: true,
+			autoSlideMethod: '0',
+			defaultTiming: 120,
+			mouseWheel: false,
+			//#previewLinks: false
+			//#postMessage: true,  // TODO : this can cause issues with the vscode api ???
+			//#postMessageEvents: false,
+			//#focusBodyOnPageVisibilityChange: true,
+			transition: 'slide',
+			transitionSpeed: 'default',
+			backgroundTransition: 'fade',
+			//#pdfMaxPagesPerSlide: Number.POSITIVE_INFINITY,
+			//#pdfSeparateFragments: true,
+			//#pdfPageHeightOffset: -1,
+			viewDistance: 3,
+			//#mobileViewDistance: 2,
+			display: 'block',
+			//#hideInactiveCursor: true,
+			//#hideCursorTime: 5000
+
+			// Parallax Background
+			parallaxBackgroundImage: '',
+			parallaxBackgroundSize: '',
+			parallaxBackgroundHorizontal: 0,
+			parallaxBackgroundVertical: 0,
+			
+			//Presentation Size
+			width: 960,
+			height: 700,
+			margin: 0.04,
+			minScale: 0.2,
+			maxScale: 2,
+			disableLayout: false,
+
+			audio: {
+				prefix: 'audio/', 	// audio files are stored in the "audio" folder
+				suffix: '.ogg',		// audio files have the ".ogg" ending
+				textToSpeechURL: null,  // the URL to the text to speech converter
+				defaultNotes: false, 	// use slide notes as default for the text to speech converter
+				defaultText: false, 	// use slide text as default for the text to speech converter
+				advance: 0, 		// advance to next slide after given time in milliseconds after audio has played, use negative value to not advance
+				autoplay: false,	// automatically start slideshow
+				defaultDuration: 5,	// default duration in seconds if no audio is available
+				defaultAudios: true,	// try to play audios with names such as audio/1.2.ogg
+				playerOpacity: 0.05,	// opacity value of audio player if unfocused
+				playerStyle: 'position: fixed; bottom: 4px; left: 25%; width: 50%; height:75px; z-index: 33;', // style used for container of audio controls
+				startAtFragment: false, // when moving to a slide, start at the current fragment or at the start of the slide
+			},
+			
+			chalkboard: { // font-awesome.min.css must be available
+					//src: "chalkboard/chalkboard.json",
+					storage: "chalkboard-demo",
+				},
+			
+			customcontrols: {
+					controls: [
+      						{
+						  id: 'toggle-overview',
+						  title: 'Toggle overview (O)',
+						  icon: '<i class="fa fa-th"></i>',
+						  action: 'Reveal.toggleOverview();'
+						}
+						,
+						{ icon: '<i class="fa fa-pen-square"></i>',
+						  title: 'Toggle chalkboard (B)',
+						  action: 'RevealChalkboard.toggleChalkboard();'
+						},
+						{ icon: '<i class="fa fa-pen"></i>',
+						  title: 'Toggle notes canvas (C)',
+						  action: 'RevealChalkboard.toggleNotesCanvas();'
+						}
+				]
+			},
+			chart: {
+					defaults: { 
+						color: 'lightgray', // color of labels
+						scale: { 
+							beginAtZero: true, 
+							ticks: { stepSize: 1 },
+							grid: { color: "lightgray" } , // color of grid lines
+						},
+					},
+					line: { borderColor: [ "rgba(20,220,220,.8)" , "rgba(220,120,120,.8)", "rgba(20,120,220,.8)" ], "borderDash": [ [5,10], [0,0] ] }, 
+					bar: { backgroundColor: [ "rgba(20,220,220,.8)" , "rgba(220,120,120,.8)", "rgba(20,120,220,.8)" ]}, 
+					pie: { backgroundColor: [ ["rgba(0,0,0,.8)" , "rgba(220,20,20,.8)", "rgba(20,220,20,.8)", "rgba(220,220,20,.8)", "rgba(20,20,220,.8)"] ]},
+					radar: { borderColor: [ "rgba(20,220,220,.8)" , "rgba(220,120,120,.8)", "rgba(20,120,220,.8)" ]}, 
+			},
+			math: {
+				mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+				config: 'TeX-AMS_HTML-full',
+				// pass other options into `MathJax.Hub.Config()`
+				TeX: { Macros: { RR: "{\\bf R}" } }
+				},
+			// Learn about plugins: https://revealjs.com/plugins/
+			plugins: (window.location.search.match(/print-pdf/gi) ? printPlugins : plugins ) 
+		});
+			
+
+
+	    // Change chalkboard theme : 
+		function changeTheme(input) {
+			var config = {};
+			config.theme = input.value;
+			Reveal.getPlugin("RevealChalkboard").configure(config);
+			input.blur();
+		}
+
+		// // Handle the message inside the webview
+        // window.addEventListener('message', event => {
+
+        //     const message = event.data; // The JSON data our extension sent
+
+        //     switch (message.command) {
+        //         case 'refactor':
+        //             Reveal.toggleHelp();
+        //     }
+        // });
+
+		if (window.location.search.match(/print-pdf-now/gi)) {
+      		setTimeout(() => {
+				window.print();
+			  }, 2500);
+			
+    }
+		
+
+	</script>
+
+</body>
+
+</html>
